@@ -9,7 +9,13 @@ const BOT_NAME = "Oz AI";
 const SYSTEM_PROMPT =
   `Sen ${BOT_NAME} atly peýdaly AI kömekçisiň. ` +
   "Ulanyjy haýsy dilde ýazsa, şol dilde gysga we düşnükli jogap ber.";
-const AI_MODEL = "openrouter/free"; // OpenRouter özi işleýän mugt modeli saýlaýar
+// Mugt modeller käte dolup galýar, şonda bot nobatdaky modeli synap görýär
+const AI_MODELS = [
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "openrouter/free", // OpenRouter özi işleýän mugt modeli saýlaýar
+];
 const AI_URL = "https://openrouter.ai/api/v1/chat/completions";
 const HISTORY_LIMIT = 20; // ýatda saklanýan habar sany
 const ALLOWED_USERS = []; // boş = hemmä açyk. Mysal: [123456789]
@@ -106,15 +112,30 @@ async function handleUpdate(update, env, token) {
 }
 
 async function askAI(apiKey, messages) {
-  const res = await fetch(AI_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: AI_MODEL, messages }),
-    signal: AbortSignal.timeout(25000),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(JSON.stringify(data.error || data));
-  return (data.choices?.[0]?.message?.content || "").trim() || "...";
+  // Cloudflare fon işine ~30 sekunt berýär, şondan geçmeli däl
+  const deadline = Date.now() + 25000;
+  let lastError;
+  for (const model of AI_MODELS) {
+    const timeLeft = deadline - Date.now();
+    if (timeLeft < 2000) break;
+    try {
+      const res = await fetch(AI_URL, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, messages }),
+        signal: AbortSignal.timeout(timeLeft),
+      });
+      const data = await res.json();
+      const answer = data.choices?.[0]?.message?.content?.trim();
+      if (res.ok && answer) return answer;
+      lastError = new Error(`${model}: ${JSON.stringify(data.error || data)}`);
+      if (res.status === 401) break; // açar nädogry, beýleki modeller hem kömek etmez
+    } catch (err) {
+      lastError = new Error(`${model}: ${err.message}`);
+    }
+    console.log(lastError.message);
+  }
+  throw lastError || new Error("wagt gutardy");
 }
 
 async function loadHistory(env, chatId) {
