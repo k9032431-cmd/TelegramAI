@@ -95,16 +95,28 @@ soňra **Deploy** basyň:
 
 ---
 
-## Tejribeli ulanyjylar üçin: öz serweriňizde (Python)
+## Öz serweriňizde (bir buýruk bilen)
 
-`server/` bukjasynda Python wersiýasy bar (Docker bilen). Linux serwerde:
+Ubuntu/Debian serwere SSH bilen giriň we şu buýrugy goýuň:
 
 ```bash
-curl -fsSL https://get.docker.com | sh
-git clone https://github.com/k9032431-cmd/TelegramAI.git
-cd TelegramAI/server
-cp .env.example .env && nano .env   # TELEGRAM_TOKEN, AI_PROVIDER, AI_API_KEY
-docker compose up -d --build
+curl -fsSL https://raw.githubusercontent.com/k9032431-cmd/TelegramAI/ccr-1ece83d6-3yt3px/install.sh | sudo bash
 ```
 
-Ol Groq, Gemini, OpenRouter we OpenAI-a meňzeş islendik API bilen işleýär.
+Skript hemme zady özi edýär: Docker gurnaýar, kody alýar, sizden Telegram
+tokenini we OpenRouter açaryny soraýar (ikisini hem barlaýar) we boty işledýär.
+Bot serwer täzeden açylanda-da özi başlaýar.
+
+Täzelemek üçin şol buýrugy gaýtadan işlediň.
+
+Peýdaly buýruklar:
+
+```bash
+cd /opt/oz-ai/server
+docker compose logs -f      # loglary görmek (Ctrl+C - çykmak)
+docker compose restart      # täzeden başlatmak
+nano .env                   # sazlamalary üýtgetmek (soňra restart)
+```
+
+Python wersiýasy `server/` bukjasynda. Ol Groq, Gemini, OpenRouter we
+OpenAI-a meňzeş islendik API bilen işleýär.

@@ -5,7 +5,7 @@ import os
 from collections import defaultdict, deque
 
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, AuthenticationError
 from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import (
@@ -30,7 +30,11 @@ PROVIDERS = {
     },
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
-        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        # Mugt modeller käte dolup galýar, şonda nobatdaky model synalýar
+        "model": "nvidia/nemotron-3-super-120b-a12b:free,"
+        "google/gemma-4-31b-it:free,"
+        "nvidia/nemotron-3-ultra-550b-a55b:free,"
+        "openrouter/free",
     },
 }
 
@@ -39,7 +43,8 @@ AI_API_KEY = os.environ["AI_API_KEY"]
 AI_PROVIDER = os.getenv("AI_PROVIDER", "openrouter").lower()
 provider = PROVIDERS.get(AI_PROVIDER, PROVIDERS["openrouter"])
 AI_BASE_URL = os.getenv("AI_BASE_URL") or provider["base_url"]
-AI_MODEL = os.getenv("AI_MODEL") or provider["model"]
+# Birnäçe model otur bilen ýazylyp bilner: "model1,model2"
+AI_MODELS = [m.strip() for m in (os.getenv("AI_MODEL") or provider["model"]).split(",") if m.strip()]
 BOT_NAME = os.getenv("BOT_NAME", "Oz AI")
 SYSTEM_PROMPT = os.getenv(
     "SYSTEM_PROMPT",
@@ -58,15 +63,34 @@ TELEGRAM_MAX_LEN = 4096
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s", level=logging.INFO
 )
-logging.getLogger("httpx").setLevel(logging.WARNING)
+for name in ("httpx", "httpx2"):
+    logging.getLogger(name).setLevel(logging.WARNING)
 log = logging.getLogger("bot")
 
-client = AsyncOpenAI(api_key=AI_API_KEY, base_url=AI_BASE_URL)
+client = AsyncOpenAI(api_key=AI_API_KEY, base_url=AI_BASE_URL, timeout=60, max_retries=0)
 history: dict[int, deque] = defaultdict(lambda: deque(maxlen=HISTORY_LIMIT))
 
 
 def is_allowed(update: Update) -> bool:
     return not ALLOWED_USERS or update.effective_user.id in ALLOWED_USERS
+
+
+async def ask_ai(messages: list[dict]) -> str | None:
+    for model in AI_MODELS:
+        try:
+            response = await client.chat.completions.create(
+                model=model, messages=messages
+            )
+            answer = (response.choices[0].message.content or "").strip()
+            if answer:
+                return answer
+            log.warning("%s: boş jogap", model)
+        except AuthenticationError:
+            log.error("AI_API_KEY nädogry")
+            return None
+        except Exception as err:
+            log.warning("%s: %s", model, err)
+    return None
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -108,13 +132,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     messages += list(history[chat_id])
     messages.append({"role": "user", "content": user_text})
 
-    try:
-        response = await client.chat.completions.create(
-            model=AI_MODEL, messages=messages
-        )
-        answer = (response.choices[0].message.content or "").strip() or "..."
-    except Exception:
-        log.exception("AI API ýalňyşlygy")
+    answer = await ask_ai(messages)
+    if answer is None:
         await update.message.reply_text(
             "Bagyşla, AI häzir jogap berip bilmedi. Birazdan gaýtadan synanyş."
         )
@@ -135,7 +154,7 @@ def main() -> None:
     app.add_handler(CommandHandler("new", new_chat))
     app.add_handler(CommandHandler("id", show_id))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    log.info("%s işledi: provider=%s model=%s", BOT_NAME, AI_PROVIDER, AI_MODEL)
+    log.info("%s işledi: provider=%s model=%s", BOT_NAME, AI_PROVIDER, AI_MODELS[0])
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
