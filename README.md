@@ -1,132 +1,110 @@
 # Oz AI — Telegram AI boty
 
-Telegramda öz AI botuňyz. **Mugt** AI API-lar bilen işleýär (Groq, Google Gemini, OpenRouter),
-söhbeti ýatda saklaýar, islendik dilde jogap berýär we serwerde aňsat işledilýär.
+Telegramda öz AI botuňyz. **Mugt**, serwer **gerek däl**, kompýuter **gerek däl** —
+hemme zady **telefondan** 10 minutda gurnap bolýar.
 
-## Näme edip bilýär
+Bot islendik dilde jogap berýär we söhbeti ýatda saklaýar.
 
-- Islendik soraga AI bilen jogap berýär
-- Soňky habarlary ýatda saklaýar (söhbeti dowam etdirýär)
-- `/new` — täze söhbet, `/id` — Telegram ID-ňizi görkezýär
-- Islege görä diňe size (ýa-da saýlan adamlaryňyza) işleýär
+Size gerek bolan 3 zat:
 
----
-
-## 1-nji ädim: Telegram bot döretmek (2 minut)
-
-1. Telegramda **@BotFather** tapyň we `/start` basyň.
-2. `/newbot` ýazyň.
-3. Bota at beriň (mysal: `Oz AI`).
-4. Username beriň, `bot` bilen gutarmaly (mysal: `oz_ai_tm_bot`).
-5. BotFather size **token** berer, şeýle görnüşde: `7123456789:AAH...`
-   Muny göçürip alyň — hiç kime görkezmäň!
-
-## 2-nji ädim: Mugt AI açaryny almak
-
-**Groq** maslahat berilýär (mugt, örän çalt):
-
-1. https://console.groq.com açyň we Google bilen giriň.
-2. Çepde **API Keys** → **Create API Key**.
-3. Açary göçürip alyň (`gsk_...` bilen başlaýar).
-
-Başga mugt wariantlar:
-
-| Üpjün ediji | Açar almak | `AI_PROVIDER` |
-|---|---|---|
-| Groq | https://console.groq.com/keys | `groq` |
-| Google Gemini | https://aistudio.google.com/apikey | `gemini` |
-| OpenRouter | https://openrouter.ai/keys | `openrouter` |
-
-> Bellik: käbir ýurtlarda bu saýtlar açylmasa, VPN gerek bolup biler.
-> Serweriňiz daşary ýurtda bolsa, bot özi kadaly işleýär.
-
-## 3-nji ädim: Sazlamak
-
-`.env.example` faýlyny `.env` diýip göçüriň we içini dolduryň:
-
-```
-TELEGRAM_TOKEN=BotFather-den alan tokeniňiz
-AI_PROVIDER=groq
-AI_API_KEY=gsk_...
-```
+1. Telegram boty tokeni (@BotFather-den)
+2. OpenRouter açary (mugt AI)
+3. Cloudflare hasaby (mugt — bot şol ýerde 24/7 işleýär)
 
 ---
 
-## 4-nji ädim: Işletmek
+## 1-nji ädim: Telegram bot döretmek
 
-### A) Öz kompýuteriňizde synap görmek
+1. Telegramda **@BotFather** açyň → `/newbot` ýazyň.
+2. Bota at beriň (mysal: `Oz AI`).
+3. Username beriň, soňy `bot` bilen gutarmaly (mysal: `oz_ai_tm_bot`).
+4. BotFather size **token** berer: `7123456789:AAH...` — göçürip alyň.
 
-[Python 3.10+](https://www.python.org/downloads/) gurnalan bolmaly.
+## 2-nji ädim: Mugt AI açary (OpenRouter)
 
-```bash
-pip install -r requirements.txt
-python bot.py
-```
+1. https://openrouter.ai/keys açyň we giriň.
+2. **Create** basyň:
+   - **Expiration** → `No expiration`
+   - **Credit limit** → `No limit` (hasabyňyzda pul ýok, hiç zat tölenmeýär)
+3. **Create** basyň we `sk-or-v1-...` açary şol bada göçürip alyň.
 
-Indi Telegramda botuňyza `/start` ýazyň. Kompýuter öçse, bot hem durýar —
-hemişe işlemegi üçin serwer gerek.
+Tokeni we açary telefonyňyzyň Notes (Ýazgylar) programmasyna goýup duruň.
 
-### B) Serwerde işletmek (Docker bilen — iň aňsat)
+## 3-nji ädim: Boty Cloudflare-de işletmek
 
-Islendik arzan Linux VPS (Ubuntu 22.04/24.04) ýeterlik: 1 CPU, 512 MB–1 GB RAM.
-Mugt wariantlar hem bar: Oracle Cloud Free Tier, Google Cloud e2-micro.
-
-Serwere SSH bilen giriň we şulary ýazyň:
-
-```bash
-# 1. Docker gurnamak
-curl -fsSL https://get.docker.com | sh
-
-# 2. Kody almak
-git clone https://github.com/k9032431-cmd/TelegramAI.git
-cd TelegramAI
-
-# 3. Sazlamak
-cp .env.example .env
-nano .env        # tokeni we açary ýazyň, Ctrl+O, Enter, Ctrl+X bilen ýapyň
-
-# 4. Işletmek
-docker compose up -d --build
-```
-
-Boldy! Bot fon režiminde işleýär we serwer täzeden açylanda-da özi başlaýar.
-
-Peýdaly buýruklar:
-
-```bash
-docker compose logs -f        # botuň loglaryny görmek (Ctrl+C bilen çykyň)
-docker compose restart        # .env üýtgedeniňizden soň
-docker compose down           # botu duruzmak
-git pull && docker compose up -d --build   # kody täzelemek
-```
+1. https://dash.cloudflare.com/sign-up açyň, email bilen hasap açyň we
+   emaile gelen hat bilen tassyklaň.
+2. Çep menýuda **Workers & Pages** (ýa-da **Compute → Workers**) açyň.
+3. **Create** → **Start with Hello World** saýlaň.
+4. Ady ýazyň, mysal: `oz-ai` → **Deploy** basyň.
+5. **Edit code** basyň. Içindäki ähli kody pozuň.
+6. Şu faýlyň ähli kodyny göçürip goýuň:
+   **[worker.js](worker.js)** (açyň → `Raw` → ählisini saýlap göçüriň)
+7. Kodyň iň ýokarsyndaky iki setiri dolduryň (dyrnaklary `" "` pozmaň):
+   ```js
+   const TELEGRAM_TOKEN = "7123456789:AAH...";
+   const AI_API_KEY = "sk-or-v1-...";
+   ```
+8. Sag ýokarda **Deploy** basyň.
+9. Botuňyzyň salgysy görkeziler, mysal: `https://oz-ai.ADYŇYZ.workers.dev`
+   Şu salgynyň soňuna **`/setup`** goşup brauzerde açyň:
+   ```
+   https://oz-ai.ADYŇYZ.workers.dev/setup
+   ```
+   **"Taýýar!"** ýazgysy çyksa — boldy! 🎉
+10. Telegramda botuňyza `/start` ýazyň.
 
 ---
 
-## Sazlamalar (`.env`)
+## Islege görä: söhbeti hemişelik ýatda saklamak
 
-| Üýtgeýji | Näme üçin | Mysal |
-|---|---|---|
-| `TELEGRAM_TOKEN` | BotFather tokeni (hökmany) | `7123:AAH...` |
-| `AI_API_KEY` | AI açary (hökmany) | `gsk_...` |
-| `AI_PROVIDER` | `groq`, `gemini`, `openrouter` | `groq` |
-| `AI_MODEL` | Modeli üýtgetmek | `llama-3.1-8b-instant` |
-| `AI_BASE_URL` | Başga OpenAI-a meňzeş API | `http://localhost:11434/v1` |
-| `BOT_NAME` | Botuň ady | `Oz AI` |
-| `SYSTEM_PROMPT` | Botuň häsiýeti, özüni nähili alyp barmaly | `Sen mugallym...` |
-| `ALLOWED_USERS` | Diňe şu ID-ler ulanyp bilsin | `123456789,987654321` |
-| `HISTORY_LIMIT` | Ýatda saklanýan habar sany | `20` |
+Bot söhbeti ýatda saklaýar, ýöne käwagt (Cloudflare täzelenende) ýatdakylar
+arassalanyp biler. Hemişelik ýatda saklasyn diýseňiz (mugt):
 
-**Botuňyzy diňe özüňize açmak:** bota `/id` ýazyň, ID-ni `.env`-däki
-`ALLOWED_USERS=` ýanyna ýazyň we `docker compose restart` ediň.
+1. Cloudflare-de çep menýu → **Storage & Databases → KV** → **Create** →
+   ady `MEMORY` → **Add**.
+2. **Workers & Pages** → `oz-ai` → **Bindings** (ýa-da **Settings → Bindings**) →
+   **Add binding** → **KV namespace**.
+3. **Variable name**: `MEMORY`, namespace: `MEMORY` → **Add binding / Deploy**.
 
-**Soňra tölegli AI-a geçmek:** OpenAI-a meňzeş islendik API işleýär —
-diňe `AI_BASE_URL`, `AI_API_KEY` we `AI_MODEL` üýtgediň, kod üýtgemeýär.
+## Botuň buýruklary
+
+- `/start` — salamlaşmak
+- `/new` — täze söhbet (ýatdakylary arassalaýar)
+- `/id` — Telegram ID-ňizi görkezýär
+
+## Sazlamalar
+
+Cloudflare-de **Edit code** açyp, kodyň ýokarsynda üýtgedip bilersiňiz,
+soňra **Deploy** basyň:
+
+- `BOT_NAME` — botuň ady
+- `SYSTEM_PROMPT` — botuň häsiýeti (mysal: "Sen iňlis dili mugallymy...")
+- `ALLOWED_USERS` — diňe size işlesin diýseňiz: `/id` bilen ID-ňizi alyň we
+  `const ALLOWED_USERS = [123456789];` diýip ýazyň
 
 ## Kynçylyklar
 
-- **Bot jogap bermeýär** → `docker compose logs -f` bilen ýalňyşlygy görüň.
-  Köplenç token ýa-da API açar nädogry bolýar.
-- **"AI häzir jogap berip bilmedi"** → mugt limit gutaran bolmagy ähtimal
-  (birnäçe minutdan gaýtadan synanyşyň) ýa-da model ady köne. Üpjün edijiň
-  saýtynda häzirki model atlaryna seredip, `AI_MODEL` bilen beriň.
-- **Ýatda saklamak** → bot täzeden başlanda söhbetler arassalanýar, bu kadaly.
+- **"Taýýar!" ýerine ýalňyşlyk çykýar** → `TELEGRAM_TOKEN` nädogry ýazylandyr.
+  Tokeni BotFather-den gaýtadan göçürip goýuň, **Deploy** we täzeden `/setup`.
+- **Bot "AI häzir jogap berip bilmedi" diýýär** → `AI_API_KEY` nädogry ýa-da
+  mugt limit wagtlaýyn gutardy. Birnäçe minutdan synanyşyň.
+- **Bot asla jogap bermeýär** → `/setup` salgysyny açdyňyzmy? Kody üýtgedip
+  **Deploy** edeniňizden soň hem `/setup`-y täzeden açyň.
+- Ýalňyşlyklary görmek: Cloudflare → `oz-ai` → **Logs** / **Observability**.
+
+---
+
+## Tejribeli ulanyjylar üçin: öz serweriňizde (Python)
+
+`server/` bukjasynda Python wersiýasy bar (Docker bilen). Linux serwerde:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+git clone https://github.com/k9032431-cmd/TelegramAI.git
+cd TelegramAI/server
+cp .env.example .env && nano .env   # TELEGRAM_TOKEN, AI_PROVIDER, AI_API_KEY
+docker compose up -d --build
+```
+
+Ol Groq, Gemini, OpenRouter we OpenAI-a meňzeş islendik API bilen işleýär.

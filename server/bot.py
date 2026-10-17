@@ -30,14 +30,14 @@ PROVIDERS = {
     },
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "model": "openrouter/free",
     },
 }
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 AI_API_KEY = os.environ["AI_API_KEY"]
-AI_PROVIDER = os.getenv("AI_PROVIDER", "groq").lower()
-provider = PROVIDERS.get(AI_PROVIDER, PROVIDERS["groq"])
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openrouter").lower()
+provider = PROVIDERS.get(AI_PROVIDER, PROVIDERS["openrouter"])
 AI_BASE_URL = os.getenv("AI_BASE_URL") or provider["base_url"]
 AI_MODEL = os.getenv("AI_MODEL") or provider["model"]
 BOT_NAME = os.getenv("BOT_NAME", "Oz AI")
